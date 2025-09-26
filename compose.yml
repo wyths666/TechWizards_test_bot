@@ -1,0 +1,43 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:15
+    environment:
+      POSTGRES_DB: ${POSTGRES_NAME}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    ports:
+      - "5432:5432"
+    volumes:
+      - ./dump.sql:/docker-entrypoint-initdb.d/dump.sql
+      - postgres-data:/var/lib/postgresql/data
+
+  bot:
+    build:
+      context: .
+      dockerfile: bot.dockerfile
+    restart: always
+    depends_on:
+      - postgres
+    env_file:
+      - .env
+    volumes:
+      - ./:/bot
+
+  api:
+    build:
+      context: .
+      dockerfile: api.dockerfile
+    restart: always
+    depends_on:
+      - postgres
+    env_file:
+      - .env
+    ports:
+      - "9000:9000"
+    volumes:
+      - ./:/api
+
+volumes:
+  postgres-data:
